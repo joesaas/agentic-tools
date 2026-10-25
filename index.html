@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Tools · Harness 分层图</title>
+<meta name="description" content="Agentic Tools Harness 分层图：点左侧任意一层，右侧看它的职责、开源项目与优劣对比。">
+<style>
+  :root{
+    --bg:#060913; --panel:#0c1226; --panel2:#0a0f22; --line:#1e2a4d;
+    --text:#f2f5ff; --muted:#a9b4d4; --dim:#7c88ad;
+    --violet:#8b5cf6; --cyan:#22d3ee; --amber:#fbbf24; --green:#34d399; --red:#fb7185;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--text); background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.65;
+    background-image:
+      radial-gradient(900px 500px at 12% -10%, rgba(139,92,246,.28), transparent 60%),
+      radial-gradient(800px 480px at 95% 0%, rgba(34,211,238,.18), transparent 60%),
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:auto,auto,56px 56px,56px 56px;
+  }
+  ::selection{background:var(--violet); color:#fff}
+  a{color:var(--cyan)}
+  button{font:inherit}
+  .wrap{max-width:1360px; margin:0 auto; padding:28px 28px 40px}
+  header{display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding:10px 4px 22px; border-bottom:1px solid var(--line)}
+  h1{margin:0; font-size:clamp(30px,4vw,52px); line-height:1.15; letter-spacing:-.02em; font-weight:800}
+  h1 span{color:var(--cyan)}
+  .subtitle{margin:10px 0 0; color:var(--muted); font-size:16px; max-width:760px}
+  .meta{text-align:right; color:var(--dim); font-size:13px; white-space:nowrap}
+  .meta b{color:var(--text); font-size:20px}
+  .stage{display:grid; grid-template-columns:400px 1fr; gap:22px; margin-top:22px; align-items:start}
+  /* ---- left stack ---- */
+  .stack{position:relative; padding:6px 0 6px 26px}
+  .stack::before{content:""; position:absolute; left:10px; top:28px; bottom:28px; width:2px; background:linear-gradient(var(--violet),var(--cyan))}
+  .layer{
+    position:relative; width:100%; text-align:left; cursor:pointer; color:var(--text);
+    background:linear-gradient(135deg, rgba(139,92,246,.14), rgba(34,211,238,.06));
+    border:1px solid var(--line); border-radius:16px; padding:16px 16px 14px 18px; margin:0 0 12px;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .layer::before{content:""; position:absolute; left:-22px; top:50%; width:13px; height:13px; margin-top:-7px; border-radius:50%; background:#16204a; border:2px solid var(--dim)}
+  .layer:hover{transform:translateX(4px); border-color:#3b4d8f}
+  .layer[aria-pressed="true"]{border-color:var(--cyan); background:linear-gradient(135deg, rgba(139,92,246,.32), rgba(34,211,238,.14)); box-shadow:0 12px 40px rgba(34,211,238,.16); transform:translateX(8px)}
+  .layer[aria-pressed="true"]::before{background:var(--cyan); border-color:var(--cyan); box-shadow:0 0 0 6px rgba(34,211,238,.18)}
+  .layer-top{display:flex; align-items:center; gap:12px}
+  .layer-top svg{flex:none; width:30px; height:30px; stroke:var(--cyan); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+  .layer[aria-pressed="true"] .layer-top svg{stroke:#fff}
+  .ln{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--cyan); letter-spacing:.08em}
+  .layer h2{margin:0; font-size:20px; line-height:1.3}
+  .layer p{margin:4px 0 0 42px; color:var(--muted); font-size:13.5px; line-height:1.5}
+  .hint{color:var(--dim); font-size:13px; padding:2px 4px 0}
+  .hint kbd{font-family:ui-monospace,Menlo,monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:1px 6px; color:var(--muted); background:#0d1530}
+  /* ---- right detail ---- */
+  .detail{background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:22px; padding:28px 30px; box-shadow:0 20px 60px rgba(0,0,0,.35); min-height:620px}
+  .detail-head{display:flex; justify-content:space-between; gap:20px; align-items:start}
+  .detail h2{margin:0; font-size:clamp(26px,3vw,38px); line-height:1.2; letter-spacing:-.01em}
+  .detail h2 small{display:block; font-size:14px; color:var(--cyan); letter-spacing:.1em; margin-bottom:6px; font-family:ui-monospace,Menlo,monospace}
+  .tag{flex:none; border:1px solid var(--line); border-radius:999px; padding:6px 12px; color:var(--muted); font-size:13px; background:#0a1128}
+  .desc{font-size:17px; color:#dbe2f7; max-width:72ch; margin:16px 0 0}
+  .scope{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0 6px}
+  .scope div{border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:rgba(6,9,19,.45)}
+  .scope h3{margin:0 0 6px; font-size:14px; color:var(--cyan)}
+  .scope p{margin:0; color:var(--muted); font-size:14.5px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 4px}
+  .chips span{border:1px solid #2b3a6e; background:#0d1736; color:#c7d0ee; border-radius:999px; padding:5px 11px; font-size:13px}
+  .projects{margin-top:24px}
+  .projects h3{margin:0 0 4px; font-size:20px}
+  .projects>p{margin:0 0 14px; color:var(--dim); font-size:14px}
+  .proj{border-top:1px solid var(--line); padding:18px 2px; display:grid; grid-template-columns:210px 1fr 1fr; gap:18px}
+  .proj:first-of-type{border-top:0}
+  .proj-name{font-size:18px; font-weight:700; line-height:1.35}
+  .proj-name span{display:block; font-weight:400; font-size:13px; color:var(--dim); margin-top:4px}
+  .pro,.con{font-size:14.5px}
+  .pro b{color:var(--green)} .con b{color:var(--amber)}
+  .pro p,.con p{margin:4px 0 0; color:var(--muted)}
+  .pick{margin-top:8px; border-radius:14px; padding:16px 18px; background:linear-gradient(90deg, rgba(139,92,246,.22), rgba(34,211,238,.10)); border:1px solid #3a2f7a; font-size:15px}
+  .pick b{color:#fff}
+  footer{margin-top:22px; color:var(--dim); font-size:13px; border-top:1px solid var(--line); padding-top:16px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+  :focus-visible{outline:3px solid var(--cyan); outline-offset:3px}
+  @media (max-width:900px){
+    .wrap{padding:20px 16px 32px}
+    .stage{grid-template-columns:1fr}
+    .meta{display:none}
+    .detail{padding:22px 18px}
+    .scope{grid-template-columns:1fr}
+    .proj{grid-template-columns:1fr; gap:8px}
+    .detail-head{flex-direction:column}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .layer{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Agentic Tools <span>·</span> Harness 分层图</h1>
+      <p class="subtitle">点左侧任意一层，右侧看它管什么、有哪些开源实现、各自的优劣，以及这一层该怎么选。先看分层，再看工具，不被单个明星项目带偏。</p>
+    </div>
+    <div class="meta"><b>6 层</b><br>24 个开源项目</div>
+  </header>
+
+  <main class="stage">
+    <section aria-label="Harness 层级">
+      <div class="stack" id="stack"></div>
+      <p class="hint">键盘也可操作：选中一层后按 <kbd>↑</kbd> <kbd>↓</kbd> 切换，链接会同步到地址栏 # 层级。</p>
+    </section>
+
+    <section class="detail" id="detail" aria-live="polite"></section>
+  </main>
+
+  <footer>
+    <span>单文件静态页，无外部依赖，可直接用浏览器打开，也可丢进任何静态托管。</span>
+    <span>项目口碑、许可与版本会变，选型前以官方仓库为准；本页不含星数等易过期数字。</span>
+  </footer>
+</div>
+
+<script>
+const ICONS = {
+  model:'<circle cx="12" cy="6" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M12 8.5 5.5 15.5M12 8.5l6.5 7M7.5 18h9"/>',
+  orchestrate:'<path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v3h-3M6 21v-3h3"/>',
+  tools:'<path d="M9 7V4M15 7V4M7 7h10v4a5 5 0 0 1-10 0zM12 16v4"/>',
+  memory:'<path d="M4 8l8-4 8 4-8 4z"/><path d="M4 13l8 4 8-4"/><path d="M4 18l8 4 8-4"/>',
+  guard:'<path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  observe:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+const LAYERS = [
+  {id:"model", code:"L1", icon:"model", name:"模型层", en:"Model & Reasoning", tag:"大模型、推理与规划能力",
+   desc:"Agent 能不能干活，第一步看模型：理解任务、拆解步骤、在长上下文里不丢关键信息。这一层不直接等于 Agent，模型再强，没有循环、工具和护栏也跑不完真实任务。",
+   owns:"选模型、推理策略、上下文窗口与成本预算。", notOwn:"不负责执行步骤、调工具、记长期记忆、做审批。",
+   keys:["推理与规划","长上下文","成本与延迟","模型切换"],
+   pick:"先定任务难度再选模型：简单任务用小而快的模型，复杂多步任务再上强推理模型；用统一网关兜底，避免被一家模型绑死。",
+   projects:[
+    {name:"Ollama", stack:"本地模型运行 · 跨平台", pro:"一行命令就能拉模型跑起来，离线可用，新手友好。", con:"推理性能与并发不如生产推理引擎，不自带 Agent 循环。"},
+    {name:"vLLM", stack:"生产推理引擎 · OpenAI 兼容接口", pro:"高吞吐、低延迟，适合把模型做成服务给 Agent 调。", con:"部署与显存调优门槛高，更适合有运维能力的团队。"},
+    {name:"LiteLLM", stack:"统一模型网关 · 100+ 模型", pro:"一个接口接多家模型，支持 fallback、预算与限流。", con:"多一层代理要运维，复杂路由出问题时排障链路变长。"},
+    {name:"llama.cpp", stack:"轻量推理 · 端侧 / CPU", pro:"体积小、CPU 也能跑，适合嵌入设备与离线场景。", con:"大模型与超长上下文吃力，配套 Agent 工具较少。"}]},
+  {id:"orchestrate", code:"L2", icon:"orchestrate", name:"编排层", en:"Orchestration & Execution", tag:"Agent 循环、多智能体与任务执行",
+   desc:"Harness 的心脏：想一步、做一步、看结果、再想下一步。单 Agent 循环、多 Agent 分工、长任务断点续跑，都归这一层。它决定了 Agent 是“聊两句”还是“真把事办完”。",
+   owns:"循环控制、任务分解、多 Agent 协作、失败重试与断点续跑。", notOwn:"不负责模型本身、工具协议细节、长期记忆策略。",
+   keys:["Agent 循环","多 Agent","状态机","断点续跑"],
+   pick:"流程固定选图编排，角色分工明确选多 Agent 框架；先跑通单 Agent 闭环，再加多 Agent，别一上来就堆复杂度。",
+   projects:[
+    {name:"LangGraph", stack:"图编排 · Python / JS", pro:"状态机可控、可断点续跑、生态最大，复杂流程也兜得住。", con:"样板代码多，学习曲线陡，小任务会显得笨重。"},
+    {name:"AutoGen / Microsoft Agent Framework", stack:"多智能体 · 微软生态", pro:"对话式多 Agent 概念直观，与微软工具链整合顺。", con:"版本迭代快，API 变动大，升级时要留回归成本。"},
+    {name:"CrewAI", stack:"角色编排 · Python", pro:"上手最快，角色与任务的说法接近业务语言。", con:"抽象层较厚，流程一复杂就难精细控制每一步。"},
+    {name:"Google ADK", stack:"官方 Agent 框架 · Python / TS", pro:"Runner、工具、子 Agent 结构清晰，适合从零搭 Agent 应用。", con:"生态相对较新，非 Google 技术栈整合要自己接。"}]},
+  {id:"tools", code:"L3", icon:"tools", name:"工具层", en:"Tools & Protocols", tag:"MCP、A2A、函数调用与外部系统",
+   desc:"Agent 的手：查数据、调 API、操作文件、发消息，都要经过工具。协议层决定工具能不能跨厂商复用、权限怎么管、调用失败怎么回退。工具越多，越要先谈安全与审计。",
+   owns:"工具定义、协议互通、调用、鉴权、审计与失败回退。", notOwn:"不决定任务怎么拆、记忆记什么、结果要不要人批。",
+   keys:["MCP","A2A","函数调用","工具网关"],
+   pick:"优先走 MCP 这类开放协议，别给每个工具写一套私有调用；工具上生产前先把权限收敛到最小，审计日志默认开。",
+   projects:[
+    {name:"MCP SDK", stack:"开放工具协议 · 多语言", pro:"事实上的工具标准，服务器生态多，跨厂商复用。", con:"权限与提示注入风险要自己防，协议仍在快速演进。"},
+    {name:"FastMCP", stack:"快速建 MCP Server · Python", pro:"几行代码就能把函数变成标准工具服务，类型即 Schema。", con:"偏 Python 生态，生产网关、鉴权要另外搭。"},
+    {name:"A2A Protocol", stack:"Agent 间通信 · 已捐 Linux 基金会", pro:"让不同厂商的 Agent 互相协作，有标准消息与任务模型。", con:"落地案例还少，调试与可观测工具不成熟。"},
+    {name:"ToolHive", stack:"工具网关 · 统一鉴权审计", pro:"把一堆 MCP 服务器收进一个网关，权限与审计集中管。", con:"多一跳延迟与配置成本，小项目直接连工具更简单。"}]},
+  {id:"memory", code:"L4", icon:"memory", name:"记忆层", en:"Memory & Context", tag:"会话、长期记忆、RAG 与上下文压缩",
+   desc:"Agent 的记性：这次对话说了什么、用户长期偏好是什么、以前踩过什么坑。没有记忆层，Agent 每次都是新人；记忆太滥，又会把旧错当成新事实反复用。",
+   owns:"会话记忆、长期记忆、知识检索、上下文压缩与遗忘策略。", notOwn:"不决定任务流程、不执行工具、不做最终审批。",
+   keys:["长期记忆","RAG","上下文压缩","遗忘策略"],
+   pick:"先分清三类：会话内上下文、用户长期偏好、可检索知识；记忆写入要分级，推断类先待批，别让模型随手写进长期记忆。",
+   projects:[
+    {name:"Mem0", stack:"记忆层 · 抽取 + 检索一体", pro:"接入门槛低，抽取、存储、检索一条线打通。", con:"抽取质量依赖模型，长期记忆仍需人工抽查纠错。"},
+    {name:"Zep", stack:"时序知识图谱 · 长会话", pro:"时间线加关系图谱，适合跨越多轮的复杂会话。", con:"部署较重，版本与许可变动要留意，适合中大型项目。"},
+    {name:"LangMem", stack:"LangGraph 原生记忆 · Python", pro:"与 LangGraph 集成最顺，语义记忆与程序记忆都有。", con:"绑定 LangChain 生态，单独拎出来用会别扭。"},
+    {name:"pgvector / Qdrant", stack:"向量底座 · 可自托管", pro:"成熟稳定，可自托管，是 RAG 最常见的底座。", con:"它只是存储，记什么、何时忘、怎么更新，全要自己写。"}]},
+  {id:"guard", code:"L5", icon:"guard", name:"护栏层", en:"Guardrails & Human-in-the-Loop", tag:"审批、沙箱、策略与成本上限",
+   desc:"Agent 的刹车与安全带：花钱、删数据、对外发消息之前，先问人；代码与命令先在沙箱里跑；输出先过规则校验。没有这一层，Agent 越能干，事故越大。",
+   owns:"人工审批、沙箱隔离、输入输出校验、策略与成本硬顶。", notOwn:"不决定任务怎么做、不提供模型与工具能力。",
+   keys:["人工审批","沙箱隔离","输出校验","成本硬顶"],
+   pick:"默认全开审批不现实：按风险分级，不可逆操作必批，只读操作放行；沙箱与成本上限是上线前必须有的两道底线。",
+   projects:[
+    {name:"HumanLayer", stack:"人工审批 · API 优先", pro:"审批就是为 Agent 设计的，可插 Slack、邮件等审批通道。", con:"审批流一复杂，编排与超时处理要自己补。"},
+    {name:"NeMo Guardrails", stack:"可编程护栏 · NVIDIA", pro:"输入、对话、输出三段都能写规则，控制粒度细。", con:"规则语言有学习成本，规则写多后维护负担上升。"},
+    {name:"Guardrails AI", stack:"输出校验 · Schema 优先", pro:"按 Schema 校验输出并尝试自动修复，直观好上手。", con:"强校验可能拖慢链路，复杂业务规则仍需手写。"},
+    {name:"Daytona / E2B Sandbox", stack:"沙箱执行 · 隔离环境", pro:"代码与命令在隔离沙箱跑，快照可复现，炸了也不伤主机。", con:"沙箱即服务有成本，自托管则要承担运维量。"}]},
+  {id:"observe", code:"L6", icon:"observe", name:"观测层", en:"Observability & Evaluation", tag:"追踪、评测、成本与回归",
+   desc:"Agent 的仪表盘与考场：每一步花了多少钱、走了哪条分支、在哪一步卡住，出了问题能不能复现；改了提示词或模型，效果是变好还是变差，要有评测集说了算。",
+   owns:"链路追踪、成本统计、评测集、回归对比与告警。", notOwn:"不直接执行任务、不做审批、不替代人工抽查。",
+   keys:["链路追踪","评测集","成本统计","回归对比"],
+   pick:"上线第一天就接追踪，别等出事故再补；评测集不用大，但要覆盖真实失败案例，每次改动先跑回归再发布。",
+   projects:[
+    {name:"Langfuse", stack:"追踪 + 评测 · 可自托管", pro:"开源可自托管，追踪、提示管理、评测在一处。", con:"自托管要管数据库与升级，小团队要算运维账。"},
+    {name:"Phoenix (Arize)", stack:"追踪 + 评估 · Notebook 友好", pro:"开源、可视化强，调模型与查轨迹时很顺手。", con:"大规模生产追踪要配存储与采样策略。"},
+    {name:"LangSmith", stack:"官方追踪 · LangChain 生态", pro:"与 LangChain 集成最顺，评测集与对比工具成熟。", con:"核心能力偏 SaaS，自托管受限，成本随量上涨。"},
+    {name:"OpenTelemetry + Grafana", stack:"通用可观测 · 厂商中立", pro:"标准协议不绑定厂商，指标日志追踪可统一看。", con:"Agent 语义如轨迹、步骤、成本，要自己建模补齐。"}]}
+];
+
+const stackEl = document.getElementById('stack');
+const detailEl = document.getElementById('detail');
+
+function renderStack(activeId){
+  stackEl.innerHTML = LAYERS.map(function(l){
+    return '<button class="layer" type="button" data-id="'+l.id+'" aria-pressed="'+(l.id===activeId)+'" aria-label="'+l.name+'，'+l.en+'">'
+      + '<div class="layer-top"><svg viewBox="0 0 24 24" aria-hidden="true">'+ICONS[l.icon]+'</svg>'
+      + '<div><span class="ln">'+l.code+' · '+l.en.toUpperCase()+'</span><h2>'+l.name+'</h2></div></div>'
+      + '<p>'+l.tag+'</p></button>';
+  }).join('');
+  stackEl.querySelectorAll('.layer').forEach(function(btn){
+    btn.addEventListener('click', function(){ select(btn.dataset.id, true); });
+  });
+}
+function renderDetail(l){
+  detailEl.innerHTML =
+    '<div class="detail-head"><h2><small>'+l.code+' · '+l.en.toUpperCase()+'</small>'+l.name+'</h2><span class="tag">'+l.projects.length+' 个开源项目</span></div>'
+    + '<p class="desc">'+l.desc+'</p>'
+    + '<div class="scope"><div><h3>它管什么</h3><p>'+l.owns+'</p></div><div><h3>它不管什么</h3><p>'+l.notOwn+'</p></div></div>'
+    + '<div class="chips">'+l.keys.map(function(k){ return '<span>'+k+'</span>'; }).join('')+'</div>'
+    + '<div class="projects"><h3>开源项目 · 优劣对比</h3><p>每条优劣各一句话，先看短板能不能接受，再看长处是不是你需要的。</p>'
+    + l.projects.map(function(p){
+        return '<div class="proj"><div class="proj-name">'+p.name+'<span>'+p.stack+'</span></div>'
+          + '<div class="pro"><b>优势</b><p>'+p.pro+'</p></div>'
+          + '<div class="con"><b>短板</b><p>'+p.con+'</p></div></div>';
+      }).join('')
+    + '</div>'
+    + '<div class="pick"><b>这一层怎么选：</b>'+l.pick+'</div>';
+}
+function select(id, pushHash){
+  const l = LAYERS.find(function(x){ return x.id===id; }) || LAYERS[1];
+  renderStack(l.id);
+  renderDetail(l);
+  if(pushHash){ history.replaceState(null, '', '#'+l.id); }
+  const active = stackEl.querySelector('[data-id="'+l.id+'"]');
+  if(active) active.focus({preventScroll:true});
+}
+document.addEventListener('keydown', function(e){
+  const active = document.activeElement;
+  if(!active || !active.classList.contains('layer')) return;
+  const idx = LAYERS.findIndex(function(x){ return x.id===active.dataset.id; });
+  if(e.key==='ArrowDown' && idx < LAYERS.length-1){ e.preventDefault(); select(LAYERS[idx+1].id, true); }
+  if(e.key==='ArrowUp' && idx > 0){ e.preventDefault(); select(LAYERS[idx-1].id, true); }
+});
+window.addEventListener('hashchange', function(){
+  const id = location.hash.replace('#','');
+  if(LAYERS.some(function(x){ return x.id===id; })) select(id, false);
+});
+const initial = location.hash.replace('#','');
+select(LAYERS.some(function(x){ return x.id===initial; }) ? initial : 'orchestrate', false);
+</script>
+</body>
+</html>
