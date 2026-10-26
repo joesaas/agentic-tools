@@ -91,6 +91,18 @@
   .rank-table td{padding:12px 10px 12px 2px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
   .rank-table td:first-child{color:var(--amber); font-weight:700; white-space:nowrap}
   .rank-table td:nth-child(2){color:var(--text); font-weight:700; white-space:nowrap}
+  .cross{margin-top:22px; border:1px solid #3a2f7a; border-radius:22px; padding:28px 30px; background:linear-gradient(180deg, rgba(139,92,246,.12), rgba(34,211,238,.04)); box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .cross h2{margin:0; font-size:clamp(24px,3vw,34px); line-height:1.2}
+  .cross h2 small{display:block; font-size:13px; color:var(--cyan); letter-spacing:.1em; margin-bottom:6px; font-family:ui-monospace,Menlo,monospace}
+  .cross .desc{font-size:16px; color:#dbe2f7; max-width:80ch}
+  .cross-flow{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:18px 0 6px; font-size:14.5px}
+  .cross-flow span{border:1px solid var(--line); border-radius:999px; padding:7px 13px; background:#0a1128; color:#e6eafc}
+  .cross-flow i{color:var(--cyan); font-style:normal}
+  .cross-table{width:100%; border-collapse:collapse; font-size:14.5px; margin-top:14px}
+  .cross-table th{color:var(--cyan); text-align:left; font-size:13px; padding:10px 10px 10px 2px; border-bottom:1px solid var(--line); white-space:nowrap}
+  .cross-table td{padding:10px 10px 10px 2px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .cross-table td:first-child{color:var(--text); font-weight:700; white-space:nowrap}
+  .cross-note{margin-top:16px; color:var(--dim); font-size:14px}
   .pick{margin-top:8px; border-radius:14px; padding:16px 18px; background:linear-gradient(90deg, rgba(139,92,246,.22), rgba(34,211,238,.10)); border:1px solid #3a2f7a; font-size:15px}
   .pick b{color:#fff}
   footer{margin-top:22px; color:var(--dim); font-size:13px; border-top:1px solid var(--line); padding-top:16px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
@@ -104,6 +116,9 @@
     .proj{grid-template-columns:1fr; gap:8px}
     .rank-table{font-size:13.5px}
     .rank-table td:nth-child(2){white-space:normal}
+    .cross{padding:22px 18px}
+    .cross-table{font-size:13.5px}
+    .cross-table td:first-child{white-space:normal}
     .detail-head{flex-direction:column}
   }
   @media (prefers-reduced-motion:reduce){
@@ -130,6 +145,29 @@
 
     <section class="detail" id="detail" aria-live="polite"></section>
   </main>
+
+  <section class="cross" aria-label="跨层改进环 Harness²">
+    <h2><small>CROSS-LAYER · NOT A LAYER</small>跨层改进环：Harness²</h2>
+    <p class="desc">不属于上面 6 层中的任何一层，不计入层数与项目总数。它是一条包在整栈外面的循环：用评估证据改 harness，再把教训带到下一个任务。模型权重冻结，改的是模型周围的系统，不是模型本身。</p>
+    <div class="cross-flow" aria-label="Harness² 循环">
+      <span>执行初始 harness</span><i>→</i><span>Propose：提议改动</span><i>→</i><span>Probe：同任务探针执行</span><i>→</i><span>Compose：按行为对比拼装</span><i>→</i><span>反思：写进改进库</span><i>→</i><span>下一个任务</span>
+    </div>
+    <p class="cross-note">任务层对比不用 ground truth，靠不同执行的行差异判断；harness 层在每个任务后保留被采纳的 harness 与有证据的教训。</p>
+    <table class="cross-table">
+      <thead><tr><th>可改组件</th><th>主要落在哪层</th><th>改什么</th></tr></thead>
+      <tbody>
+        <tr><td>system prompt</td><td>L1 模型层 / L2 编排层</td><td>上下文怎么建、任务怎么表述</td></tr>
+        <tr><td>guardrails</td><td>L5 护栏层</td><td>哪些行为要拦、哪些要先批</td></tr>
+        <tr><td>memory</td><td>L4 记忆层</td><td>记什么、怎么取用历史</td></tr>
+        <tr><td>tool guidance</td><td>L3 工具层</td><td>工具怎么描述、怎么调用</td></tr>
+        <tr><td>subagents</td><td>L2 编排层</td><td>分工怎么拆、谁干哪部分</td></tr>
+        <tr><td>skills</td><td>L3 工具层</td><td>可复用的能力包怎么给</td></tr>
+        <tr><td>scripts</td><td>L3 工具层</td><td>确定性步骤怎么做</td></tr>
+        <tr><td>plugins</td><td>L3 工具层</td><td>中间件怎么拦截与扩展</td></tr>
+      </tbody>
+    </table>
+    <p class="cross-note">为什么不放进某一层：输入是评估（JobBench、LAB、WorkBuddy-Bench 三个专业基准），输出是跨层改动；放进评估层会让人误以为它只是打分工具。限制也要先说清：裁判本身也是模型，探针预算 k 越大成本越高；仓库注明这不是 Google 官方支持产品。项目地址：<a href="https://github.com/google-research/harness2">google-research/harness2</a>（Apache-2.0，执行器为 OpenCode 与 Codex）。本节不进综合排名，因为它不是单层工具。</p>
+  </section>
 
   <footer>
     <span>单文件静态页，无外部依赖，可直接用浏览器打开，也可丢进任何静态托管。</span>
