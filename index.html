@@ -80,6 +80,17 @@
   .pro,.con{font-size:14.5px}
   .pro b{color:var(--green)} .con b{color:var(--amber)}
   .pro p,.con p{margin:4px 0 0; color:var(--muted)}
+  .view-switch{display:flex; gap:8px; margin:22px 0 4px; flex-wrap:wrap}
+  .view-switch button{cursor:pointer; border:1px solid var(--line); background:#0a1128; color:var(--muted); border-radius:999px; padding:8px 16px; font-size:14px}
+  .view-switch button[aria-pressed="true"]{border-color:var(--cyan); color:#fff; background:linear-gradient(135deg, rgba(139,92,246,.35), rgba(34,211,238,.15))}
+  .rank-note{color:var(--dim); font-size:14px; margin:0 0 14px}
+  .rank-criteria{border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:rgba(6,9,19,.45); margin:0 0 16px; font-size:14.5px; color:var(--muted)}
+  .rank-criteria b{color:#fff}
+  .rank-table{width:100%; border-collapse:collapse; font-size:14.5px}
+  .rank-table th{color:var(--cyan); text-align:left; font-size:13px; padding:10px 10px 10px 2px; border-bottom:1px solid var(--line); white-space:nowrap}
+  .rank-table td{padding:12px 10px 12px 2px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted)}
+  .rank-table td:first-child{color:var(--amber); font-weight:700; white-space:nowrap}
+  .rank-table td:nth-child(2){color:var(--text); font-weight:700; white-space:nowrap}
   .pick{margin-top:8px; border-radius:14px; padding:16px 18px; background:linear-gradient(90deg, rgba(139,92,246,.22), rgba(34,211,238,.10)); border:1px solid #3a2f7a; font-size:15px}
   .pick b{color:#fff}
   footer{margin-top:22px; color:var(--dim); font-size:13px; border-top:1px solid var(--line); padding-top:16px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
@@ -91,6 +102,8 @@
     .detail{padding:22px 18px}
     .scope{grid-template-columns:1fr}
     .proj{grid-template-columns:1fr; gap:8px}
+    .rank-table{font-size:13.5px}
+    .rank-table td:nth-child(2){white-space:normal}
     .detail-head{flex-direction:column}
   }
   @media (prefers-reduced-motion:reduce){
@@ -106,7 +119,7 @@
       <h1>Agentic Tools <span>·</span> Harness 分层图</h1>
       <p class="subtitle">点左侧任意一层，右侧看它管什么、有哪些开源实现、各自的优劣，以及这一层该怎么选。先看分层，再看工具，不被单个明星项目带偏。</p>
     </div>
-    <div class="meta"><b>6 层</b><br>24 个开源项目</div>
+    <div class="meta"><b>6 层</b><br>25 个开源项目</div>
   </header>
 
   <main class="stage">
@@ -193,8 +206,24 @@ const LAYERS = [
     {name:"Langfuse", stack:"追踪 + 评测 · 可自托管", pro:"开源可自托管，追踪、提示管理、评测在一处。", con:"自托管要管数据库与升级，小团队要算运维账。"},
     {name:"Phoenix (Arize)", stack:"追踪 + 评估 · Notebook 友好", pro:"开源、可视化强，调模型与查轨迹时很顺手。", con:"大规模生产追踪要配存储与采样策略。"},
     {name:"LangSmith", stack:"官方追踪 · LangChain 生态", pro:"与 LangChain 集成最顺，评测集与对比工具成熟。", con:"核心能力偏 SaaS，自托管受限，成本随量上涨。"},
+    {name:"DeepEval", stack:"纯评估 · 评测框架", pro:"像写单测一样写评测，指标与数据集可复用，专补评测这一项。", con:"指标选错等于白测，仍需人工抽查真实失败案例。"},
     {name:"OpenTelemetry + Grafana", stack:"通用可观测 · 厂商中立", pro:"标准协议不绑定厂商，指标日志追踪可统一看。", con:"Agent 语义如轨迹、步骤、成本，要自己建模补齐。"}]}
 ];
+
+/* 综合排名：只列同时满足 4 条标准的项目，宁缺毋滥，所以是 8 个不是 10 个。
+   标准：①开源或开放协议 ②在其层是首选或事实标准 ③生产可用，非演示项目 ④不绑死单一厂商或模型。
+   排名是编辑判断（按“搭一个可靠 Agent 时的必选程度”排），不是星数、下载量，选型前仍以官方仓库为准。 */
+const RANKING = [
+  {rank:1, name:"LangGraph", layer:"L2 编排层", reason:"图编排可控、可断点续跑，复杂流程也兜得住。"},
+  {rank:2, name:"MCP SDK", layer:"L3 工具层", reason:"工具协议的事实标准，跨厂商复用成本最低。"},
+  {rank:3, name:"LiteLLM", layer:"L1 模型层", reason:"一个接口接多家模型，兜底、预算、限流一次解决。"},
+  {rank:4, name:"vLLM", layer:"L1 模型层", reason:"生产推理的高吞吐选择，适合把模型做成服务。"},
+  {rank:5, name:"HumanLayer", layer:"L5 护栏层", reason:"审批就是为 Agent 设计的，不可逆操作先有人批。"},
+  {rank:6, name:"Langfuse", layer:"L6 观测层", reason:"追踪、提示管理、评测在一处，还可自托管。"},
+  {rank:7, name:"Mem0", layer:"L4 记忆层", reason:"记忆抽取、存储、检索一条线，接入门槛最低。"},
+  {rank:8, name:"DeepEval", layer:"L6 观测层", reason:"像写单测一样写评测，补上原来缺失的纯评估一项。"}
+];
+let viewMode = 'compare';
 
 const stackEl = document.getElementById('stack');
 const detailEl = document.getElementById('detail');
@@ -210,13 +239,18 @@ function renderStack(activeId){
     btn.addEventListener('click', function(){ select(btn.dataset.id, true); });
   });
 }
+function renderRankTable(){
+  return '<div class="projects"><h3>综合排名 · Top '+RANKING.length+'</h3>'
+    + '<p class="rank-note">不随左侧层切换，全站综合；只列达标的 8 个，未凑满 10 个。</p>'
+    + '<div class="rank-criteria"><b>入选标准（须同时满足）：</b>①开源或开放协议 ②在其层是首选或事实标准 ③生产可用，非演示项目 ④不绑死单一厂商或模型。排名按“搭一个可靠 Agent 时的必选程度”排，是编辑判断，不是星数、下载量。</div>'
+    + '<table class="rank-table"><thead><tr><th>排名</th><th>项目</th><th>所在层</th><th>入选理由</th></tr></thead><tbody>'
+    + RANKING.map(function(r){
+        return '<tr><td>'+r.rank+'</td><td>'+r.name+'</td><td>'+r.layer+'</td><td>'+r.reason+'</td></tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
 function renderDetail(l){
-  detailEl.innerHTML =
-    '<div class="detail-head"><h2><small>'+l.code+' · '+l.en.toUpperCase()+'</small>'+l.name+'</h2><span class="tag">'+l.projects.length+' 个开源项目</span></div>'
-    + '<p class="desc">'+l.desc+'</p>'
-    + '<div class="scope"><div><h3>它管什么</h3><p>'+l.owns+'</p></div><div><h3>它不管什么</h3><p>'+l.notOwn+'</p></div></div>'
-    + '<div class="chips">'+l.keys.map(function(k){ return '<span>'+k+'</span>'; }).join('')+'</div>'
-    + '<div class="projects"><h3>开源项目 · 优劣对比</h3><p>每条优劣各一句话，先看短板能不能接受，再看长处是不是你需要的。</p>'
+  const compareHtml = '<div class="projects"><h3>开源项目 · 优劣对比</h3><p>每条优劣各一句话，先看短板能不能接受，再看长处是不是你需要的。</p>'
     + l.projects.map(function(p){
         return '<div class="proj"><div class="proj-name">'+p.name+'<span>'+p.stack+'</span></div>'
           + '<div class="pro"><b>优势</b><p>'+p.pro+'</p></div>'
@@ -224,6 +258,18 @@ function renderDetail(l){
       }).join('')
     + '</div>'
     + '<div class="pick"><b>这一层怎么选：</b>'+l.pick+'</div>';
+  detailEl.innerHTML =
+    '<div class="detail-head"><h2><small>'+l.code+' · '+l.en.toUpperCase()+'</small>'+l.name+'</h2><span class="tag">'+l.projects.length+' 个开源项目</span></div>'
+    + '<p class="desc">'+l.desc+'</p>'
+    + '<div class="scope"><div><h3>它管什么</h3><p>'+l.owns+'</p></div><div><h3>它不管什么</h3><p>'+l.notOwn+'</p></div></div>'
+    + '<div class="chips">'+l.keys.map(function(k){ return '<span>'+k+'</span>'; }).join('')+'</div>'
+    + '<div class="view-switch" role="group" aria-label="视图切换">'
+    + '<button type="button" data-view="compare" aria-pressed="'+(viewMode==='compare')+'">本层对比</button>'
+    + '<button type="button" data-view="rank" aria-pressed="'+(viewMode==='rank')+'">综合排名 Top '+RANKING.length+'</button></div>'
+    + (viewMode==='rank' ? renderRankTable() : compareHtml);
+  detailEl.querySelectorAll('.view-switch button').forEach(function(btn){
+    btn.addEventListener('click', function(){ viewMode = btn.dataset.view; renderDetail(l); });
+  });
 }
 function select(id, pushHash){
   const l = LAYERS.find(function(x){ return x.id===id; }) || LAYERS[1];
